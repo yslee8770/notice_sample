@@ -29,6 +29,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             update Post p 
             set p.likeCount=p.likeCount-1
             where p.id=:postId 
+            and p.likeCount!=0
             """)
     void updateMinusLikeCount(@Param("postId") Long postId);
 }

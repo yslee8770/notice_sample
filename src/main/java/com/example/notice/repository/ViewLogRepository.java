@@ -17,7 +17,7 @@ public interface ViewLogRepository extends JpaRepository<ViewLog, Long> {
                     where
                     v.postId=:postId
                     and v. userId=:userId
-                    and :cutoff>v.lastViewTime+10
+                    and v.lastViewTime < :cutoff
             """)
     int updateLastViewTimeByPostIdAndUserId(Long postId, Long userId, Instant cutoff);
 

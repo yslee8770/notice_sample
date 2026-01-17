@@ -62,7 +62,7 @@ public class PostService {
 
     @Transactional
     public PostResponse like(Long postId, Long userId) {
-        if (isViewLogPresent(postId, userId)) {
+        if (isLikedByMe(postId, userId)) {
             return PostResponse.from(selectPostByPostId(postId));
         }
         Like like = Like.create(postId, userId);
@@ -73,9 +73,11 @@ public class PostService {
 
     @Transactional
     public PostResponse unLike(Long postId, Long userId) {
-        if (isViewLogPresent(postId, userId)) {
-            likeRepository.deleteByPostIdAndUserId(postId, userId);
-            postRepository.updateMinusLikeCount(postId);
+        if (isLikedByMe(postId, userId)) {
+            int deleteCount = likeRepository.deleteByPostIdAndUserId(postId, userId);
+            if(deleteCount > 0) {
+                postRepository.updateMinusLikeCount(postId);
+            }
         }
         return PostResponse.from(selectPostByPostId(postId), false);
     }

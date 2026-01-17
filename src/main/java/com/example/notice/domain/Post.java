@@ -21,11 +21,11 @@ public class Post {
 
     private Long authorId;
 
-    private Integer viewCount;
+    private Long viewCount;
 
-    private Integer likeCount;
+    private Long likeCount;
 
-    private Post(String title, String content, Long authorId, Integer viewCount, Integer likeCount) {
+    private Post(String title, String content, Long authorId, Long viewCount, Long likeCount) {
         this.title = title;
         this.content = content;
         this.authorId = authorId;
@@ -34,7 +34,7 @@ public class Post {
     }
 
     public static Post create(String title, String content, Long authorId) {
-        return new Post(title, content, authorId, 0, 0);
+        return new Post(title, content, authorId, 0L, 0L);
     }
 
 
