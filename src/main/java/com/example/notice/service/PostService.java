@@ -8,6 +8,7 @@ import com.example.notice.repository.LikeRepository;
 import com.example.notice.repository.PostRepository;
 import com.example.notice.repository.ViewLogRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,39 +24,30 @@ public class PostService {
 
     @Transactional
     public PostResponse getPost(Long postId, Long userId) {
+        boolean likeByMe = true;
         if (userId == null) {
             postRepository.updateViewCount(postId);
-            return PostResponse.from(selectPostByPostId(postId));
+            likeByMe = false;
         } else {
             if (isViewLogPresent(postId, userId)) {
-                int updateCount = viewLogRepository.updateLastViewTimeByPostIdAndUserId(
-                        postId,
-                        userId,
-                        Instant.now().minusSeconds(10)
-                );
-
-                if (updateCount > 0) {
-                    postRepository.updateViewCount(postId);
-                }
+                updateViewCount(postId, userId);
             } else {
-                ViewLog viewLog = ViewLog.create(postId, userId);
-                viewLogRepository.save(viewLog);
-                postRepository.updateViewCount(postId);
+                try {
+                    ViewLog viewLog = ViewLog.create(postId, userId);
+                    viewLogRepository.save(viewLog);
+                    postRepository.updateViewCount(postId);
+                } catch (DataIntegrityViolationException e) {
+                    updateViewCount(postId, userId);
+                }
             }
-            if (isLikedByMe(postId, userId)) {
-                return PostResponse.from(selectPostByPostId(postId));
+            if (!isLikedByMe(postId, userId)) {
+                likeByMe = false;
             }
-            return PostResponse.from(selectPostByPostId(postId), false);
         }
+        return PostResponse.from(selectPostByPostId(postId), likeByMe);
     }
 
     @Transactional(readOnly = true)
-    protected Post selectPostByPostId(long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-    }
-
-    @Transactional
     public boolean isViewLogPresent(Long postId, Long userId) {
         return viewLogRepository.findByPostIdAndUserId(postId, userId).isPresent();
     }
@@ -63,19 +55,24 @@ public class PostService {
     @Transactional
     public PostResponse like(Long postId, Long userId) {
         if (isLikedByMe(postId, userId)) {
-            return PostResponse.from(selectPostByPostId(postId));
+            return PostResponse.from(selectPostByPostId(postId), true);
         }
-        Like like = Like.create(postId, userId);
-        likeRepository.save(like);
-        postRepository.updatePlusLikeCount(postId);
-        return PostResponse.from(selectPostByPostId(postId));
+        try{
+            Like like = Like.create(postId, userId);
+            likeRepository.save(like);
+            postRepository.updatePlusLikeCount(postId);
+        }catch (Exception e){
+            return PostResponse.from(selectPostByPostId(postId), true);
+        }
+
+        return PostResponse.from(selectPostByPostId(postId), true);
     }
 
     @Transactional
     public PostResponse unLike(Long postId, Long userId) {
         if (isLikedByMe(postId, userId)) {
             int deleteCount = likeRepository.deleteByPostIdAndUserId(postId, userId);
-            if(deleteCount > 0) {
+            if (deleteCount > 0) {
                 postRepository.updateMinusLikeCount(postId);
             }
         }
@@ -85,5 +82,24 @@ public class PostService {
     @Transactional(readOnly = true)
     public boolean isLikedByMe(Long postId, Long userId) {
         return likeRepository.findByPostIdAndUserId(postId, userId).isPresent();
+    }
+
+    @Transactional
+    protected void updateViewCount(Long postId, Long userId) {
+        int updateCount = viewLogRepository.updateLastViewTimeByPostIdAndUserId(
+                postId,
+                userId,
+                Instant.now().minusSeconds(10)
+        );
+
+        if (updateCount > 0) {
+            postRepository.updateViewCount(postId);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    protected Post selectPostByPostId(long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
     }
 }

@@ -16,7 +16,7 @@ public interface ViewLogRepository extends JpaRepository<ViewLog, Long> {
                     update ViewLog v set v.lastViewTime = CURRENT_TIMESTAMP
                     where
                     v.postId=:postId
-                    and v. userId=:userId
+                    and v.userId=:userId
                     and v.lastViewTime < :cutoff
             """)
     int updateLastViewTimeByPostIdAndUserId(Long postId, Long userId, Instant cutoff);

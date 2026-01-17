@@ -7,8 +7,8 @@ public record PostResponse (
         String title,
         String content,
         long authorId,
-        int viewCount,
-        int likeCount,
+        long viewCount,
+        long likeCount,
         boolean likeByMe
 ){
     public static PostResponse from (Post post,boolean likeByMe){
@@ -20,17 +20,6 @@ public record PostResponse (
                 post.getViewCount(),
                 post.getLikeCount(),
                 likeByMe
-        );
-    }
-    public static PostResponse from (Post post){
-        return new PostResponse(
-                post.getId(),
-                post.getTitle(),
-                post.getContent(),
-                post.getAuthorId(),
-                post.getViewCount(),
-                post.getLikeCount(),
-                false
         );
     }
 }
