@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.transaction.annotation.Transactional;
 
 @Entity
 @Getter
@@ -17,17 +15,16 @@ public class Like {
     @Column(name = "like_id")
     private Long id;
 
+    private Long postId;
+
     private Long userId;
 
-    private Long noticeId;
-
-    private Like(Long userId, Long noticeId) {
+    private Like(Long postId, Long userId) {
+        this.postId = postId;
         this.userId = userId;
-        this.noticeId = noticeId;
     }
 
-    public static Like create(Long userId, Long noticeId) {
-        return new Like(userId, noticeId);
+    public static Like create(Long postId, Long userId) {
+        return new Like(postId, userId);
     }
-
 }
