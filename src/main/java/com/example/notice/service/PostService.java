@@ -30,14 +30,13 @@ public class PostService {
         } else {
             if (isViewLogPresent(postId, userId)) {
                 updateViewCount(postId, userId);
-                likeByMe = true;
             } else {
                 try {
                     ViewLog viewLog = ViewLog.create(postId, userId);
                     viewLogRepository.save(viewLog);
                     postRepository.updateViewCount(postId);
                 } catch (DataIntegrityViolationException e) {
-                    return PostResponse.from(selectPostByPostId(postId), true);
+                    updateViewCount(postId, userId);
                 }
             }
             if (isLikedByMe(postId, userId)) {
