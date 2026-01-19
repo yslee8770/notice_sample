@@ -19,13 +19,13 @@ public class PostController {
         return ResponseEntity.ok(postService.getPost(postId, userId));
     }
 
-    @PutMapping("{postId}/likes")
+    @PutMapping("/{postId}/likes")
     public ResponseEntity<PostResponse> like(@PathVariable Long postId,
                                      @RequestHeader(value = "X-User-Id") Long userId) {
         return ResponseEntity.ok(postService.like(postId, userId));
     }
 
-    @DeleteMapping("{postId}/likes")
+    @DeleteMapping("/{postId}/likes")
     public ResponseEntity<PostResponse> unLike(@PathVariable Long postId,
                                        @RequestHeader(value = "X-User-Id") Long userId) {
         return ResponseEntity.ok(postService.unLike(postId, userId));

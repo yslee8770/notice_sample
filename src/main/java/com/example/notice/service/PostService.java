@@ -24,24 +24,24 @@ public class PostService {
 
     @Transactional
     public PostResponse getPost(Long postId, Long userId) {
-        boolean likeByMe = true;
+        boolean likeByMe = false;
         if (userId == null) {
             postRepository.updateViewCount(postId);
-            likeByMe = false;
         } else {
             if (isViewLogPresent(postId, userId)) {
                 updateViewCount(postId, userId);
+                likeByMe = true;
             } else {
                 try {
                     ViewLog viewLog = ViewLog.create(postId, userId);
                     viewLogRepository.save(viewLog);
                     postRepository.updateViewCount(postId);
                 } catch (DataIntegrityViolationException e) {
-                    updateViewCount(postId, userId);
+                    return PostResponse.from(selectPostByPostId(postId), true);
                 }
             }
-            if (!isLikedByMe(postId, userId)) {
-                likeByMe = false;
+            if (isLikedByMe(postId, userId)) {
+                likeByMe = true;
             }
         }
         return PostResponse.from(selectPostByPostId(postId), likeByMe);
@@ -57,11 +57,11 @@ public class PostService {
         if (isLikedByMe(postId, userId)) {
             return PostResponse.from(selectPostByPostId(postId), true);
         }
-        try{
+        try {
             Like like = Like.create(postId, userId);
             likeRepository.save(like);
             postRepository.updatePlusLikeCount(postId);
-        }catch (Exception e){
+        } catch (DataIntegrityViolationException e) {
             return PostResponse.from(selectPostByPostId(postId), true);
         }
 
